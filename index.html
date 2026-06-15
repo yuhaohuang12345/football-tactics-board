@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>足球战术板</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#0b1120;color:#e2e8f0;height:100vh;overflow:hidden;user-select:none}
+.app{display:flex;height:100vh}
+
+/* Sidebar */
+.sidebar{width:300px;min-width:300px;background:linear-gradient(180deg,#111b2e 0%,#0b1120 100%);display:flex;flex-direction:column;border-right:1px solid rgba(56,139,253,.12)}
+.s-head{padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:10px}
+.s-head .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px rgba(29,78,216,.3)}
+.s-head h1{font-size:17px;font-weight:700;color:#f1f5f9;letter-spacing:-.2px}
+.s-head h1 small{display:block;font-size:10px;font-weight:400;color:#64748b;letter-spacing:0;margin-top:1px}
+
+.s-section{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.04)}
+.s-label{font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px}
+
+.team-tabs{display:flex;gap:6px;margin-bottom:12px}
+.team-tab{flex:1;padding:7px 0;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);color:#94a3b8;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.team-tab:hover{border-color:rgba(255,255,255,.1);color:#e2e8f0}
+.team-tab.active-home{background:rgba(239,68,68,.12);color:#fca5a5;border-color:rgba(239,68,68,.3)}
+.team-tab.active-away{background:rgba(59,130,246,.12);color:#93c5fd;border-color:rgba(59,130,246,.3)}
+.team-tab .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+.add-form{display:flex;flex-direction:column;gap:8px}
+.add-form .fr{display:flex;gap:6px}
+.add-form input,.add-form select{padding:8px 10px;border:1px solid rgba(255,255,255,.06);border-radius:8px;background:rgba(0,0,0,.3);color:#e2e8f0;font-size:13px;flex:1;outline:none;transition:border .2s}
+.add-form input:focus,.add-form select:focus{border-color:rgba(59,130,246,.4)}
+.add-form input::placeholder{color:#475569}
+.add-form .btn-add{padding:8px 16px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;transition:all .2s;box-shadow:0 2px 8px rgba(29,78,216,.25)}
+.add-form .btn-add:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(29,78,216,.35)}
+.add-form .btn-add:active{transform:translateY(0)}
+
+.player-list{flex:1;overflow-y:auto;padding:8px 20px;min-height:0}
+.player-list::-webkit-scrollbar{width:4px}
+.player-list::-webkit-scrollbar-track{background:transparent}
+.player-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:3px}
+.player-list .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 0;color:#334155;font-size:13px;gap:6px}
+.player-list .empty span{font-size:28px;opacity:.4}
+
+.p-item{display:flex;align-items:center;padding:6px 8px;border-radius:8px;cursor:pointer;margin-bottom:2px;transition:all .15s;gap:10px}
+.p-item:hover{background:rgba(255,255,255,.035)}
+.p-item.sel{background:rgba(59,130,246,.08);box-shadow:inset 0 0 0 1px rgba(59,130,246,.15)}
+.p-item .num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .15s}
+.p-item:hover .num{transform:scale(1.05)}
+.p-item .info{flex:1;min-width:0}
+.p-item .info .nm{font-size:13px;font-weight:500;color:#e2e8f0}
+.p-item .info .ps{font-size:11px;color:#64748b}
+.p-item .del{width:24px;height:24px;border:none;background:transparent;color:#334155;cursor:pointer;border-radius:6px;font-size:14px;display:flex;align-items:center;justify-content:center;opacity:0;transition:all .15s}
+.p-item:hover .del{opacity:1}
+.p-item .del:hover{color:#fca5a5;background:rgba(239,68,68,.12)}
+
+.s-foot{padding:12px 20px 16px;border-top:1px solid rgba(255,255,255,.04)}
+.s-foot .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.s-foot .top .ball-btn{padding:5px 12px;background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.2);border-radius:6px;color:#eab308;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:4px}
+.s-foot .top .ball-btn:hover{background:rgba(234,179,8,.15);border-color:rgba(234,179,8,.35)}
+.p-grid{display:flex;flex-wrap:wrap;gap:4px}
+.p-grid button{padding:5px 11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:6px;color:#64748b;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s}
+.p-grid button:hover{border-color:rgba(59,130,246,.25);color:#93c5fd;background:rgba(59,130,246,.06)}
+.p-grid .clr{color:#fca5a5;border-color:rgba(239,68,68,.15)}
+.p-grid .clr:hover{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.06)}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.toolbar{display:flex;align-items:center;gap:2px;padding:8px 16px;background:rgba(17,27,46,.6);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.04);flex-wrap:wrap}
+.tg{display:flex;align-items:center;gap:2px;padding:0 10px;border-right:1px solid rgba(255,255,255,.04)}
+.tg:last-child{border-right:none}
+.t-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;color:#64748b;border-radius:6px;cursor:pointer;font-size:15px;transition:all .15s;position:relative}
+.t-btn:hover{background:rgba(255,255,255,.04);color:#e2e8f0}
+.t-btn.active{background:rgba(59,130,246,.15);color:#93c5fd;border-color:rgba(59,130,246,.25)
+}
+.t-btn .k{position:absolute;bottom:1px;right:3px;font-size:7px;color:#334155;font-weight:700}
+.sep{width:1px;height:24px;background:rgba(255,255,255,.04);margin:0 4px}
+.toolbar input[type=color]{width:26px;height:26px;border:none;background:transparent;cursor:pointer;padding:0;border-radius:50%}
+.toolbar input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+.toolbar input[type=color]::-webkit-color-swatch{border:1px solid rgba(255,255,255,.08);border-radius:50%}
+.toolbar input[type=range]{width:52px;height:3px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.06);border-radius:2px;outline:none}
+.toolbar input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#60a5fa;cursor:pointer;border:2px solid #111b2e}
+.tl{font-size:11px;color:#334155;min-width:16px;text-align:center;font-variant-numeric:tabular-nums}
+
+.cw{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#0f172a,#0b1120)}
+.cw canvas{position:absolute;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.4)}
+#pc{z-index:1}
+#oc{z-index:2;cursor:default}
+
+.sb{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:11px;color:#334155;z-index:10;pointer-events:none;background:rgba(11,17,32,.85);padding:4px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.04);white-space:nowrap;backdrop-filter:blur(8px)}
+
+/* Modal */
+.mo{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+.md{background:#111b2e;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:28px;min-width:340px;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.md h2{font-size:16px;font-weight:600;margin-bottom:18px;color:#f1f5f9}
+.md .r{display:flex;gap:10px;margin-bottom:12px}
+.md input,.md select{flex:1;padding:9px 12px;border:1px solid rgba(255,255,255,.06);border-radius:8px;background:rgba(0,0,0,.3);color:#e2e8f0;font-size:13px;outline:none;transition:border .15s}
+.md input:focus,.md select:focus{border-color:rgba(59,130,246,.4)}
+.md .br{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.md .b1{padding:8px 22px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600}
+.md .b2{padding:8px 22px;background:transparent;color:#64748b;border:1px solid rgba(255,255,255,.06);border-radius:8px;cursor:pointer;font-size:13px}
+.md .b1:hover,.md .b2:hover{opacity:.88}
+
+@media(max-width:820px){
+.app{flex-direction:column}
+.sidebar{width:100%;min-width:unset;max-height:38vh;border-right:none;border-bottom:1px solid rgba(255,255,255,.04)}
+.player-list{max-height:80px}
+.s-foot{padding:10px 16px 12px}
+.toolbar{padding:6px 10px}
+.tg{padding:0 6px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="s-head">
+      <div class="logo">&#9917;</div>
+      <h1>战术板<small>拖拽球员 &middot; 双击编辑 &middot; 绘制战术</small></h1>
+    </div>
+
+    <div class="s-section">
+      <div class="team-tabs" id="teamTabs">
+        <button class="team-tab active-home" data-t="home" onclick="switchTeam('home')"><span class="dot" style="background:#ef4444"></span>主队</button>
+        <button class="team-tab active-away" data-t="away" onclick="switchTeam('away')"><span class="dot" style="background:#3b82f6"></span>客队</button>
+      </div>
+      <div class="add-form">
+        <div class="fr">
+          <input type="text" id="n" placeholder="球员姓名" style="flex:2">
+          <input type="number" id="num" placeholder="号码" min="1" max="99" style="flex:1">
+        </div>
+        <div class="fr">
+          <select id="pos" style="flex:2">
+            <option value="">选择位置</option>
+            <option>门将 GK</option><option>中后卫 CB</option><option>边后卫 FB</option>
+            <option>后腰 CDM</option><option>中前卫 CM</option><option>边前卫 WM</option>
+            <option>前腰 CAM</option><option>边锋 W</option><option>前锋 ST</option>
+          </select>
+          <button class="btn-add" onclick="addPlayer()">+ 添加</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="s-section" style="padding:10px 20px 6px"><div class="s-label">球员列表</div></div>
+    <div class="player-list" id="pl"></div>
+
+    <div class="s-foot">
+      <div class="top">
+        <div class="s-label" style="margin-bottom:0">阵型预设</div>
+        <button class="ball-btn" onclick="addBall()">&#9917; 加球</button>
+      </div>
+      <div class="p-grid">
+        <button onclick="applyForm('4-4-2')">4-4-2</button>
+        <button onclick="applyForm('4-3-3')">4-3-3</button>
+        <button onclick="applyForm('3-5-2')">3-5-2</button>
+        <button onclick="applyForm('4-2-3-1')">4-2-3-1</button>
+        <button onclick="applyForm('3-4-3')">3-4-3</button>
+        <button onclick="applyForm('5-3-2')">5-3-2</button>
+        <button onclick="applyForm('4-1-4-1')">4-1-4-1</button>
+        <button class="clr" onclick="clearTeam()">清空</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="toolbar">
+      <div class="tg">
+        <button class="t-btn active" onclick="setMode('sel')" id="mSel">&#128070;<span class="k">V</span></button>
+        <button class="t-btn" onclick="setMode('pen')" id="mPen">&#9998;&#65039;<span class="k">P</span></button>
+        <button class="t-btn" onclick="setMode('line')" id="mLine">&#128211;<span class="k">L</span></button>
+        <button class="t-btn" onclick="setMode('arrow')" id="mArrow">&#10145;&#65039;<span class="k">A</span></button>
+        <button class="t-btn" onclick="setMode('rect')" id="mRect">&#9633;<span class="k">R</span></button>
+        <button class="t-btn" onclick="setMode('circ')" id="mCirc">&#9711;<span class="k">C</span></button>
+        <button class="t-btn" onclick="setMode('eraser')" id="mErase">&#129529;<span class="k">E</span></button>
+      </div>
+      <div class="sep"></div>
+      <div class="tg">
+        <input type="color" id="dc" value="#ffffff" onchange="tCh()">
+        <input type="range" id="dw" min="1" max="8" value="3" step=".5" oninput="tCh()">
+        <span class="tl" id="wl">3</span>
+      </div>
+      <div class="sep"></div>
+      <div class="tg">
+        <button class="t-btn" title="撤销 Ctrl+Z" onclick="undo()">&#8617;&#65039;</button>
+        <button class="t-btn" title="清除绘制" onclick="clrDraw()" style="color:#fca5a5">&#128465;&#65039;</button>
+        <button class="t-btn" title="全屏" onclick="fs()">&#9925;</button>
+      </div>
+    </div>
+
+    <div class="cw" id="c">
+      <canvas id="pc"></canvas>
+      <canvas id="oc"></canvas>
+      <div class="sb" id="st">选择模式 &middot; 拖拽球员 &middot; 双击编辑</div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="mo" id="em" style="display:none" onclick="if(event.target===this) closeEdit()">
+  <div class="md">
+    <h2>编辑球员</h2>
+    <div class="r"><input type="text" id="en" placeholder="姓名"><input type="number" id="enm" placeholder="号码" min="1" max="99"></div>
+    <div class="r"><select id="ep" style="flex:1">
+      <option>门将 GK</option><option>中后卫 CB</option><option>边后卫 FB</option>
+      <option>后腰 CDM</option><option>中前卫 CM</option><option>边前卫 WM</option>
+      <option>前腰 CAM</option><option>边锋 W</option><option>前锋 ST</option>
+    </select></div>
+    <div class="br"><button class="b2" onclick="closeEdit()">取消</button><button class="b1" onclick="saveEdit()">保存</button></div>
+  </div>
+</div>
+
+<script>
+// ===== State =====
+let P = [], B = [], D = [], U = [];
+let pid = 0, bid = 0, team = 'home', mode = 'sel', selId = null;
+let drag = null, drawing = false, currD = null;
+let W = 0, H = 0;
+
+// ===== Init =====
+window.addEventListener('load', () => {
+  pc.width = oc.width = 600; pc.height = oc.height = 400;
+  window.pctx = pc.getContext('2d');
+  window.octx = oc.getContext('2d');
+  resize();
+  // Default: 8 home players in own half
+  const init = ['门将 GK','中后卫 CB','中后卫 CB','边后卫 FB','边后卫 FB','中前卫 CM','中前卫 CM','前锋 ST'];
+  team = 'home';
+  init.forEach((p,i) => { pid++; P.push({id:'p'+pid,name:'球员'+(i+1),number:i+1,position:p,t:'home',c:'#ef4444',x:W/2,y:H/2}); });
+  posTeam('home');
+  renderPl(); render();
+  setSt('已加载 8 名球员（主队半场）');
+  // Events
+  oc.addEventListener('mousedown', mD); oc.addEventListener('mousemove', mM);
+  oc.addEventListener('mouseup', mU); oc.addEventListener('mouseleave', mU);
+  oc.addEventListener('dblclick', mDbl);
+  oc.addEventListener('touchstart', e=>{e.preventDefault();var t=e.touches[0];mD(t);});
+  oc.addEventListener('touchmove', e=>{e.preventDefault();var t=e.touches[0];mM(t);});
+  oc.addEventListener('touchend', e=>{e.preventDefault();mU();});
+});
+window.addEventListener('resize', resize);
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); return; }
+  const k = {v:'sel',p:'pen',l:'line',a:'arrow',r:'rect',c:'circ',e:'eraser'};
+  if (k[e.key]) setMode(k[e.key]);
+});
+
+function resize() {
+  const r = document.getElementById('c').getBoundingClientRect();
+  let w = r.width - 32, h = r.height - 32;
+  const ar = 105/68;
+  if (w * ar > h) w = h/ar; else h = w * ar;
+  W = Math.round(w); H = Math.round(h);
+  pc.width = oc.width = W; pc.height = oc.height = H;
+  pc.style.width = oc.style.width = W+'px'; pc.style.height = oc.style.height = H+'px';
+  drawPitch(); render();
+}
+
+// ===== Pitch =====
+function drawPitch() {
+  const ctx = pctx, W2 = W, H2 = H;
+  ctx.clearRect(0,0,W2,H2);
+  const g = ctx.createRadialGradient(W2/2,H2/2,0,W2/2,H2/2,H2*0.7);
+  g.addColorStop(0,'#1a7a2e'); g.addColorStop(0.6,'#145a22'); g.addColorStop(1,'#0e3d16');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W2,H2);
+  for(let i=0;i<14;i+=2){ctx.fillStyle='rgba(255,255,255,.018)';ctx.fillRect(i*W2/14,0,W2/28,H2);}
+  const pd=18, pw=W2-pd*2, ph=H2-pd*2;
+  ctx.strokeStyle='rgba(255,255,255,.78)'; ctx.lineWidth=1.5; ctx.setLineDash([]);
+  ctx.strokeRect(pd,pd,pw,ph);
+  ctx.beginPath(); ctx.moveTo(pd,H2/2); ctx.lineTo(W2-pd,H2/2); ctx.stroke();
+  const cc=Math.min(pw,ph)*0.1;
+  ctx.beginPath(); ctx.arc(W2/2,H2/2,cc,0,Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W2/2,H2/2,3,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,.78)'; ctx.fill();
+  const aW=pw*0.59, aH=ph*0.16, gW=pw*0.27, gH=ph*0.055, glW=pw*0.1, glH=6, ps=ph*0.105, pa=Math.min(pw,ph)*0.075;
+  const cx=W2/2;
+  const da=(y,w,h)=>ctx.strokeRect(cx-w/2,y,w,h);
+  da(pd,aW,aH); da(H2-pd-aH,aW,aH); da(pd,gW,gH); da(H2-pd-gH,gW,gH);
+  [pd+ps,H2-pd-ps].forEach(y=>{ctx.beginPath();ctx.arc(cx,y,2.5,0,Math.PI*2);ctx.fill();});
+  ctx.beginPath(); ctx.arc(cx,pd+aH,pa,-Math.PI*0.82,Math.PI*0.82); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,H2-pd-aH,pa,Math.PI*1.18,Math.PI*0.18); ctx.stroke();
+  const cr=Math.min(pw,ph)*0.025;
+  [[pd,pd],[W2-pd,pd],[pd,H2-pd],[W2-pd,H2-pd]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,cr,0,Math.PI*0.5);ctx.stroke();});
+  ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=2.5;
+  ctx.strokeRect(cx-glW/2,pd-glH,glW,glH); ctx.strokeRect(cx-glW/2,H2-pd,glW,glH);
+  ctx.strokeStyle='rgba(255,255,255,.08)'; ctx.lineWidth=.5;
+  for(let i=0;i<=6;i++){const x=cx-glW/2+i*glW/6;ctx.beginPath();ctx.moveTo(x,pd-glH);ctx.lineTo(x,pd);ctx.stroke();ctx.beginPath();ctx.moveTo(x,H2-pd);ctx.lineTo(x,H2-pd+glH);ctx.stroke();}
+  for(let j=0;j<=3;j++){const y=pd-glH+j*glH/3;ctx.beginPath();ctx.moveTo(cx-glW/2,y);ctx.lineTo(cx+glW/2,y);ctx.stroke();const y2=H2-pd+j*glH/3;ctx.beginPath();ctx.moveTo(cx-glW/2,y2);ctx.lineTo(cx+glW/2,y2);ctx.stroke();}
+}
+
+// ===== Players =====
+function switchTeam(t){team=t;document.querySelectorAll('[data-t]').forEach(el=>{el.className='team-tab';if(el.dataset.t===t)el.classList.add('active-'+t);});renderPl();}
+function addPlayer(){
+  const n=document.getElementById('n').value.trim()||('球员'+(pid+1));
+  const nu=parseInt(document.getElementById('num').value)||Math.floor(Math.random()*90+1);
+  const p=document.getElementById('pos').value||'未知';
+  const c=team==='home'?'#ef4444':'#3b82f6';
+  pid++; P.push({id:'p'+pid,name:n,number:Math.min(99,Math.max(1,nu)),position:p,t:team,c:c,x:W/2+(Math.random()-.5)*100,y:H/2+(Math.random()-.5)*80});
+  document.getElementById('n').value='';document.getElementById('num').value='';document.getElementById('pos').value='';
+  renderPl();render();setSt('已添加 '+n+' #'+nu);
+}
+function rmPlayer(id){P=P.filter(p=>p.id!==id);if(selId===id)selId=null;renderPl();render();}
+function addBall(){bid++;B.push({id:'b'+bid,x:W/2+(Math.random()-.5)*60,y:H/2+(Math.random()-.5)*80});render();setSt('已添加足球');}
+function rmBall(id){B=B.filter(b=>b.id!==id);if(selId===id)selId=null;render();}
+function clearTeam(){if(!confirm('清空当前队伍所有球员？'))return;const t=team;P=P.filter(p=>p.t!==t);if(selId&&!P.find(p=>p.id===selId)&&!B.find(b=>b.id===selId))selId=null;renderPl();render();setSt('已清空'+(t==='home'?'主队':'客队'));}
+function renderPl(){
+  const el=document.getElementById('pl');
+  const tp=P.filter(p=>p.t===team);
+  if(!tp.length){el.innerHTML='<div class="empty"><span>&#9917;</span>暂无球员，点击"添加"</div>';return;}
+  el.innerHTML=tp.map(p=>'<div class="p-item'+(selId===p.id?' sel':'')+'" onclick="selObj(\''+p.id+'\')" ondblclick="editPl(\''+p.id+'\')"><div class="num" style="background:'+p.c+'">'+p.number+'</div><div class="info"><div class="nm">'+esc(p.name)+'</div><div class="ps">'+esc(p.position)+'</div></div><button class="del" onclick="event.stopPropagation();rmPlayer(\''+p.id+'\')">&#10005;</button></div>').join('');
+}
+function selObj(id){selId=id;const p=P.find(x=>x.id===id);if(p)setSt(p.name+' #'+p.number+' &middot; '+p.position);const b=B.find(x=>x.id===id);if(b)setSt('&#9917; 足球 双击删除');renderPl();render();}
+function editPl(id){const p=P.find(x=>x.id===id);if(!p)return;document.getElementById('en').value=p.name;document.getElementById('enm').value=p.number;document.getElementById('ep').value=p.position;document.getElementById('em').style.display='flex';window._ei=id;}
+function closeEdit(){document.getElementById('em').style.display='none';}
+function saveEdit(){const p=P.find(x=>x.id===window._ei);if(!p)return;const n=document.getElementById('en').value.trim();if(n)p.name=n;const nu=parseInt(document.getElementById('enm').value);if(nu>0&&nu<=99)p.number=nu;p.position=document.getElementById('ep').value||p.position;closeEdit();renderPl();render();setSt('已更新 '+p.name+' #'+p.number);}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// ===== Formations =====
+const FM={'4-4-2':['门将 GK','边后卫 FB','中后卫 CB','中后卫 CB','边后卫 FB','边前卫 WM','中前卫 CM','中前卫 CM','边前卫 WM','前锋 ST','前锋 ST'],'4-3-3':['门将 GK','边后卫 FB','中后卫 CB','中后卫 CB','边后卫 FB','中前卫 CM','中前卫 CM','中前卫 CM','边锋 W','前锋 ST','边锋 W'],'3-5-2':['门将 GK','中后卫 CB','中后卫 CB','中后卫 CB','边前卫 WM','中前卫 CM','中前卫 CM','中前卫 CM','边前卫 WM','前锋 ST','前锋 ST'],'4-2-3-1':['门将 GK','边后卫 FB','中后卫 CB','中后卫 CB','边后卫 FB','后腰 CDM','后腰 CDM','边锋 W','前腰 CAM','边锋 W','前锋 ST'],'3-4-3':['门将 GK','中后卫 CB','中后卫 CB','中后卫 CB','边前卫 WM','中前卫 CM','中前卫 CM','边前卫 WM','边锋 W','前锋 ST','边锋 W'],'5-3-2':['门将 GK','边后卫 FB','中后卫 CB','中后卫 CB','中后卫 CB','边后卫 FB','中前卫 CM','中前卫 CM','中前卫 CM','前锋 ST','前锋 ST'],'4-1-4-1':['门将 GK','边后卫 FB','中后卫 CB','中后卫 CB','边后卫 FB','后腰 CDM','边前卫 WM','中前卫 CM','中前卫 CM','边前卫 WM','前锋 ST']};
+function applyForm(nm){
+  const slots=FM[nm];if(!slots)return;
+  const t=team, tp=P.filter(p=>p.t===t), c=t==='home'?'#ef4444':'#3b82f6';
+  const nl=[];
+  for(let i=0;i<slots.length;i++){
+    const po=slots[i];
+    if(i<tp.length){tp[i].position=po;tp[i].c=c;nl.push(tp[i]);}
+    else{pid++;const nu=Math.floor(Math.random()*90+1);nl.push({id:'p'+pid,name:po.split(' ')[0]+(i+1),number:nu,position:po,t:t,c:c,x:W/2,y:H/2});}
+  }
+  P=P.filter(p=>p.t!==t).concat(nl);
+  posTeam(t);renderPl();render();setSt('阵型 '+nm+' ('+(t==='home'?'主队':'客队')+')');
+}
+function posTeam(t){
+  const list=P.filter(p=>p.t===t);if(!list.length)return;
+  const gk=list.filter(p=>p.position.includes('门将'));
+  const df=list.filter(p=>['中后卫','边后卫','FB','CB'].some(k=>p.position.includes(k)));
+  const md=list.filter(p=>['后腰','中前卫','边前卫','前腰','CDM','CM','WM','CAM'].some(k=>p.position.includes(k)));
+  const fw=list.filter(p=>['边锋','前锋','ST','W'].some(k=>p.position.includes(k)));
+  const lines=[gk,df,md,fw].filter(l=>l.length>0);
+  for(let li=0;li<lines.length;li++){const line=lines[li];const yR=0.07+(li/(lines.length-1||1))*0.86;const y=18+yR*(H-36);for(let j=0;j<line.length;j++){const xR=(j+0.5)/line.length;line[j].x=18+xR*(W-36);line[j].y=y;}}
+}
+
+// ===== Tools =====
+function setMode(m){mode=m;document.querySelectorAll('.t-btn').forEach(e=>e.classList.remove('active'));const id={sel:'mSel',pen:'mPen',line:'mLine',arrow:'mArrow',rect:'mRect',circ:'mCirc',eraser:'mErase'}[m];const b=document.getElementById(id);if(b)b.classList.add('active');oc.style.cursor=m==='sel'?'default':'crosshair';setSt({sel:'选择/移动',pen:'自由画笔',line:'直线',arrow:'箭头',rect:'矩形',circ:'圆形',eraser:'橡皮擦'}[m]);}
+function tCh(){document.getElementById('wl').textContent=document.getElementById('dw').value;}
+function undo(){if(!U.length)return;D=U.pop();render();setSt('已撤销');}
+function clrDraw(){if(!D.length)return;if(!confirm('清除所有绘制？'))return;saveU();D=[];render();setSt('已清除');}
+function saveU(){U.push(JSON.parse(JSON.stringify(D)));if(U.length>30)U.shift();}
+
+// ===== Mouse =====
+function gP(e){const r=oc.getBoundingClientRect();return{x:(e.clientX-r.left)*(oc.width/r.width),y:(e.clientY-r.top)*(oc.height/r.height)};}
+function hT(p){
+  for(let i=B.length-1;i>=0;i--){const b=B[i];if((p.x-b.x)**2+(p.y-b.y)**2<400)return{t:'ball',o:b};}
+  for(let i=P.length-1;i>=0;i--){const q=P[i];if((p.x-q.x)**2+(p.y-q.y)**2<625)return{t:'player',o:q};}
+  return null;
+}
+function mD(e){
+  const p=gP(e);
+  if(mode==='sel'){
+    const hit=hT(p);
+    if(hit){selId=hit.o.id;drag={t:hit.t,id:hit.o.id,ox:p.x-hit.o.x,oy:p.y-hit.o.y};renderPl();render();if(hit.t==='player')setSt(hit.o.name+' #'+hit.o.number+' &middot; '+hit.o.position);else setSt('&#9917; 拖拽移动');return;}
+    selId=null;drag=null;renderPl();render();return;
+  }
+  drawing=true;saveU();const c=document.getElementById('dc').value;const w=parseFloat(document.getElementById('dw').value);
+  currD={type:mode,points:[p],color:mode==='eraser'?'#ffffff':c,width:mode==='eraser'?w*4:w};
+}
+function mM(e){
+  const p=gP(e);
+  if(drag){const obj=[...P,...B].find(x=>x.id===drag.id);if(obj){obj.x=Math.max(12,Math.min(W-12,p.x-drag.ox));obj.y=Math.max(12,Math.min(H-12,p.y-drag.oy));render();}return;}
+  if(!drawing||!currD)return;currD.points.push(p);render();
+}
+function mU(){if(drag){drag=null;return;}if(drawing&&currD){D.push(currD);currD=null;drawing=false;render();}}
+function mDbl(e){if(mode!=='sel')return;const p=gP(e);const hit=hT(p);if(hit&&hit.t==='player')editPl(hit.o.id);if(hit&&hit.t==='ball'){if(confirm('删除这个足球？'))rmBall(hit.o.id);}}
+
+// ===== Render =====
+function render(){
+  const ctx=octx;ctx.clearRect(0,0,W,H);
+  [...D,currD].filter(Boolean).forEach(d=>drStr(ctx,d));
+  ctx.strokeStyle='rgba(255,255,255,.03)';ctx.lineWidth=.5;ctx.setLineDash([3,5]);
+  for(let i=1;i<6;i++){const x=18+i*(W-36)/6;ctx.beginPath();ctx.moveTo(x,18);ctx.lineTo(x,H-18);ctx.stroke();}
+  for(let i=1;i<8;i++){const y=18+i*(H-36)/8;ctx.beginPath();ctx.moveTo(18,y);ctx.lineTo(W-18,y);ctx.stroke();}
+  ctx.setLineDash([]);
+  B.forEach(b=>drBall(ctx,b));
+  P.forEach(p=>drPl(ctx,p));
+  if(selId){const p=P.find(x=>x.id===selId);const b=B.find(x=>x.id===selId);if(p){ctx.strokeStyle='#fbbf24';ctx.lineWidth=2;ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(p.x,p.y,25,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}if(b){ctx.strokeStyle='#fbbf24';ctx.lineWidth=2;ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(b.x,b.y,17,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}}
+}
+function drStr(ctx,d){
+  if(!d||!d.points.length)return;ctx.save();ctx.strokeStyle=d.color;ctx.lineWidth=d.width;ctx.lineCap='round';ctx.lineJoin='round';
+  if(d.type==='eraser')ctx.globalCompositeOperation='destination-out';else ctx.globalCompositeOperation='source-over';
+  const pts=d.points,last=pts[pts.length-1];
+  if(d.type==='pen'||d.type==='eraser'){ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++){const mx=(pts[i-1].x+pts[i].x)/2,my=(pts[i-1].y+pts[i].y)/2;ctx.quadraticCurveTo(pts[i-1].x,pts[i-1].y,mx,my);}ctx.lineTo(last.x,last.y);ctx.stroke();}
+  else if(d.type==='line'){if(pts.length<2)return;ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(last.x,last.y);ctx.stroke();}
+  else if(d.type==='arrow'){if(pts.length<2)return;const x1=pts[0].x,y1=pts[0].y,x2=last.x,y2=last.y;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();const a=Math.atan2(y2-y1,x2-x1);ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-13*Math.cos(a-.4),y2-13*Math.sin(a-.4));ctx.moveTo(x2,y2);ctx.lineTo(x2-13*Math.cos(a+.4),y2-13*Math.sin(a+.4));ctx.stroke();}
+  else if(d.type==='rect'){if(pts.length<2)return;ctx.strokeRect(Math.min(pts[0].x,last.x),Math.min(pts[0].y,last.y),Math.abs(last.x-pts[0].x),Math.abs(last.y-pts[0].y));}
+  else if(d.type==='circ'){if(pts.length<2)return;const r=Math.sqrt((last.x-pts[0].x)**2+(last.y-pts[0].y)**2);ctx.beginPath();ctx.arc(pts[0].x,pts[0].y,r,0,Math.PI*2);ctx.stroke();}
+  ctx.restore();
+}
+function drPl(ctx,p){
+  const r=20;ctx.save();
+  ctx.beginPath();ctx.arc(p.x+2,p.y+2,r,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.2)';ctx.fill();
+  const gr=ctx.createRadialGradient(p.x-r*.3,p.y-r*.3,0,p.x,p.y,r);
+  gr.addColorStop(0,lt(p.c,50));gr.addColorStop(.8,p.c);gr.addColorStop(1,dk(p.c,20));
+  ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=gr;ctx.fill();
+  ctx.shadowColor='rgba(0,0,0,.3)';ctx.shadowBlur=6;ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=2;ctx.stroke();
+  ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.font='bold 15px Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.number,p.x,p.y);
+  ctx.font='11px sans-serif';ctx.fillStyle='rgba(255,255,255,.8)';ctx.fillText(p.name,p.x,p.y+r+14);
+  ctx.restore();
+}
+function drBall(ctx,b){
+  const r=11;ctx.save();
+  ctx.beginPath();ctx.arc(b.x+1.5,b.y+2,r,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.15)';ctx.fill();
+  ctx.beginPath();ctx.arc(b.x,b.y,r,0,Math.PI*2);ctx.fillStyle='#f0f0f0';ctx.fill();ctx.strokeStyle='#999';ctx.lineWidth=1;ctx.stroke();
+  const x=b.x,y=b.y;ctx.fillStyle='#2a2a2a';ctx.beginPath();
+  for(let i=0;i<5;i++){const a=-Math.PI/2+i*2*Math.PI/5-.15;const X=x+r*.35*Math.cos(a),Y=y+r*.4*Math.sin(a);i===0?ctx.moveTo(X,Y):ctx.lineTo(X,Y);}
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#555';ctx.lineWidth=.8;for(let i=0;i<5;i++){const a=-Math.PI/2+i*2*Math.PI/5;const ix=x+r*.35*Math.cos(a-.15),iy=y+r*.4*Math.sin(a-.15);const ox=x+r*.85*Math.cos(a),oy=y+r*.85*Math.sin(a);ctx.beginPath();ctx.moveTo(ix,iy);ctx.lineTo(ox,oy);ctx.stroke();}
+  const hg=ctx.createRadialGradient(x-r*.4,y-r*.4,0,x,y,r);hg.addColorStop(0,'rgba(255,255,255,.35)');hg.addColorStop(1,'rgba(255,255,255,0)');ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=hg;ctx.fill();
+  ctx.restore();
+}
+function lt(h,a){let c=parseInt(h.slice(1),16);return 'rgb('+Math.min(255,(c>>16)+a)+','+Math.min(255,((c>>8)&0xff)+a)+','+Math.min(255,(c&0xff)+a)+')';}
+function dk(h,a){let c=parseInt(h.slice(1),16);return 'rgb('+Math.max(0,(c>>16)-a)+','+Math.max(0,((c>>8)&0xff)-a)+','+Math.max(0,(c&0xff)-a)+')';}
+function setSt(s){document.getElementById('st').innerHTML = s;}
+function fs(){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen();}
+</script>
+</body>
+</html>
