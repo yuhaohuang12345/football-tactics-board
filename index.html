@@ -101,14 +101,16 @@ body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-s
 .md .b2{padding:8px 22px;background:transparent;color:#64748b;border:1px solid rgba(255,255,255,.06);border-radius:8px;cursor:pointer;font-size:13px}
 .md .b1:hover,.md .b2:hover{opacity:.88}
 
-@media(max-width:820px){
-.app{flex-direction:column}
-.sidebar{width:100%;min-width:unset;max-height:38vh;border-right:none;border-bottom:1px solid rgba(255,255,255,.04)}
-.player-list{max-height:80px}
-.s-foot{padding:10px 16px 12px}
-.toolbar{padding:6px 10px}
-.tg{padding:0 6px}
-}
+ @media(max-width:820px){
+ .app{flex-direction:column}
+ .sidebar{width:100%;min-width:unset;max-height:42vh;overflow-y:auto;border-right:none;border-bottom:1px solid rgba(255,255,255,.04)}
+ .player-list{max-height:110px}
+ .s-section{padding:10px 16px}
+ .s-head{padding:12px 16px 10px}
+ .s-foot{padding:10px 16px 12px}
+ .toolbar{padding:6px 10px}
+ .tg{padding:0 6px}
+ }
 </style>
 </head>
 <body>
@@ -249,7 +251,8 @@ document.addEventListener('keydown', e => {
 
 function resize() {
   const r = document.getElementById('c').getBoundingClientRect();
-  let w = r.width - 32, h = r.height - 32;
+  const pad = window.innerWidth < 820 ? 8 : 32;
+  let w = r.width - pad, h = r.height - pad;
   const ar = 105/68;
   if (w * ar > h) w = h/ar; else h = w * ar;
   W = Math.round(w); H = Math.round(h);
@@ -396,7 +399,7 @@ function drStr(ctx,d){
   ctx.restore();
 }
 function drPl(ctx,p){
-  const r=20;ctx.save();
+  const r=Math.max(11,Math.min(20,Math.round(W*0.045)));ctx.save();
   ctx.beginPath();ctx.arc(p.x+2,p.y+2,r,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.2)';ctx.fill();
   const gr=ctx.createRadialGradient(p.x-r*.3,p.y-r*.3,0,p.x,p.y,r);
   gr.addColorStop(0,lt(p.c,50));gr.addColorStop(.8,p.c);gr.addColorStop(1,dk(p.c,20));
@@ -407,7 +410,7 @@ function drPl(ctx,p){
   ctx.restore();
 }
 function drBall(ctx,b){
-  const r=11;ctx.save();
+  const r=Math.max(7,Math.min(11,Math.round(W*0.025)));ctx.save();
   ctx.beginPath();ctx.arc(b.x+1.5,b.y+2,r,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.15)';ctx.fill();
   ctx.beginPath();ctx.arc(b.x,b.y,r,0,Math.PI*2);ctx.fillStyle='#f0f0f0';ctx.fill();ctx.strokeStyle='#999';ctx.lineWidth=1;ctx.stroke();
   const x=b.x,y=b.y;ctx.fillStyle='#2a2a2a';ctx.beginPath();
